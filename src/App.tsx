@@ -47,6 +47,12 @@ const metrics = [
   { value: '250+', label: 'Daily targeted outreach calls' },
 ]
 
+const availabilityRoles = [
+  'Available for analyst opportunities',
+  'Available for Paraplanning and Registered Client Service Associate roles',
+  'Available for Entry-Level Project Manager roles',
+]
+
 const experiences = [
   {
     company: 'Northwestern Mutual',
@@ -144,6 +150,15 @@ const publicBuilds = [
     sourceUrl: 'https://github.com/grogusungjinwoo/dobbydogz-website',
     liveUrl: 'https://www.dobbydogznyc.com/',
     tags: ['Business site', 'Brand presence', 'Responsive'],
+  },
+  {
+    title: 'Brokerage Simulator',
+    type: 'Finance simulator',
+    description:
+      'A public brokerage-style simulation for practicing portfolio decisions, market views, and transaction workflows.',
+    sourceUrl: 'https://github.com/grogusungjinwoo/Brokerage-Simulator',
+    liveUrl: 'https://grogusungjinwoo.github.io/Brokerage-Simulator/',
+    tags: ['Finance UI', 'Portfolio', 'Simulation'],
   },
 ]
 
@@ -533,8 +548,12 @@ function App() {
 
       <section id="contact" className="contact-section">
         <div className="availability">
-          <span aria-hidden="true" />
-          Available for analyst opportunities
+          <span className="availability-dot" aria-hidden="true" />
+          <ul className="availability-list" aria-label="Role availability">
+            {availabilityRoles.map((role) => (
+              <li key={role}>{role}</li>
+            ))}
+          </ul>
         </div>
         <h2>Let's work together.</h2>
         <p>

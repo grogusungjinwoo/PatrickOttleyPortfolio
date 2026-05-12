@@ -35,6 +35,14 @@ describe('Patrick Ottley portfolio', () => {
       'href',
       'https://www.dobbydogznyc.com/',
     )
+    expect(screen.getByRole('link', { name: 'Brokerage Simulator' })).toHaveAttribute(
+      'href',
+      'https://github.com/grogusungjinwoo/Brokerage-Simulator',
+    )
+    expect(screen.getByRole('link', { name: 'Brokerage Simulator live site' })).toHaveAttribute(
+      'href',
+      'https://grogusungjinwoo.github.io/Brokerage-Simulator/',
+    )
     expect(screen.getByRole('link', { name: /morality of zoos/i })).toHaveAttribute(
       'href',
       '/PatrickOttleyPortfolio/writing/writing-sample-ottley.pdf',
@@ -60,5 +68,10 @@ describe('Patrick Ottley portfolio', () => {
       'href',
       '/PatrickOttleyPortfolio/JPO.Resume.pdf',
     )
+    expect(screen.getByText(/available for analyst opportunities/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/available for paraplanning and registered client service associate roles/i),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/available for entry-level project manager roles/i)).toBeInTheDocument()
   })
 })
