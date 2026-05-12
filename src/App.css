@@ -389,6 +389,8 @@
 .credential-list article,
 .experience-card,
 .case-card,
+.build-card,
+.writing-card,
 .skill-card {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -413,6 +415,8 @@
 .credential-list h3,
 .experience-body h3,
 .case-card h3,
+.build-card h3,
+.writing-card h3,
 .skill-title h3 {
   margin: 0;
   color: #fff;
@@ -422,7 +426,9 @@
 
 .credential-list p,
 .experience-body p,
-.case-card p {
+.case-card p,
+.build-card p,
+.writing-card p {
   margin: 8px 0 0;
   color: var(--muted);
   line-height: 1.6;
@@ -500,6 +506,8 @@
 }
 
 .case-grid,
+.build-grid,
+.writing-grid,
 .skills-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -511,8 +519,39 @@
 }
 
 .case-card,
+.build-card,
+.writing-card,
 .skill-card {
   padding: 24px;
+}
+
+.build-card,
+.writing-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-title-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.card-title-link svg {
+  flex: 0 0 auto;
+  color: var(--accent);
+  opacity: 0.86;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.card-title-link:hover svg {
+  opacity: 1;
+  transform: translate(2px, -2px);
 }
 
 .card-topline,
@@ -549,6 +588,41 @@
   font-weight: 750;
   letter-spacing: 0.06em;
   padding: 7px 10px;
+}
+
+.resource-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 22px;
+}
+
+.resource-actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    transform 180ms ease;
+}
+
+.resource-actions a:hover {
+  border-color: var(--accent);
+  background: rgba(214, 194, 161, 0.1);
+  transform: translateY(-2px);
 }
 
 .contact-section {
@@ -652,6 +726,8 @@
   .about-grid,
   .experience-card,
   .case-grid,
+  .build-grid,
+  .writing-grid,
   .skills-grid {
     grid-template-columns: 1fr;
   }
@@ -715,13 +791,17 @@
   .section-heading p,
   .contact-section p,
   .experience-body p,
-  .case-card p {
+  .case-card p,
+  .build-card p,
+  .writing-card p {
     font-size: 15px;
     line-height: 1.65;
   }
 
   .experience-card,
   .case-card,
+  .build-card,
+  .writing-card,
   .skill-card,
   .credential-list article {
     padding: 20px;

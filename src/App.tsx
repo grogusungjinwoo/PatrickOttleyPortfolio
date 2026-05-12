@@ -32,8 +32,10 @@ const navItems = [
   { id: 'hero', label: 'Home', icon: Home },
   { id: 'about', label: 'About', icon: User },
   { id: 'experience', label: 'Experience', icon: Briefcase },
-  { id: 'work', label: 'Work', icon: FolderOpen },
+  { id: 'work', label: 'Work', icon: LineChart },
   { id: 'skills', label: 'Skills', icon: Sparkles },
+  { id: 'builds', label: 'Builds', icon: FolderOpen },
+  { id: 'writing', label: 'Writing', icon: FileText },
   { id: 'contact', label: 'Contact', icon: Mail },
 ]
 
@@ -112,6 +114,60 @@ const caseStudies = [
     description:
       'Created KPI reporting around delivery speed, holiday spend, customer demographics, and duration of stay for local operations.',
     tags: ['Excel', 'SQL', 'Tableau', 'Power BI'],
+  },
+]
+
+const publicBuilds = [
+  {
+    title: 'The Forge',
+    type: 'Browser workspace compiler',
+    description:
+      'A browser-safe compiler for guided templates, presets, previews, and downloadable ZIP workspaces.',
+    sourceUrl: 'https://github.com/grogusungjinwoo/The-Forge',
+    liveUrl: 'https://grogusungjinwoo.github.io/The-Forge/',
+    tags: ['Templates', 'Presets', 'ZIP export'],
+  },
+  {
+    title: 'Pokedex',
+    type: 'Interactive reference app',
+    description:
+      'A clean, searchable Pokemon reference experience built as a public front-end project.',
+    sourceUrl: 'https://github.com/grogusungjinwoo/Pokedex',
+    liveUrl: 'https://grogusungjinwoo.github.io/Pokedex/',
+    tags: ['API UI', 'Search', 'Front end'],
+  },
+  {
+    title: 'DobbyDogzNYC.com',
+    type: 'Local business website',
+    description:
+      'A client-facing web presence for a New York dog daycare brand, built around clear services and trust signals.',
+    sourceUrl: 'https://github.com/grogusungjinwoo/dobbydogz-website',
+    liveUrl: 'https://www.dobbydogznyc.com/',
+    tags: ['Business site', 'Brand presence', 'Responsive'],
+  },
+]
+
+const writingSamples = [
+  {
+    title: 'Philosophy of Animals: Morality of Zoos',
+    description:
+      'An ethics paper evaluating zoos through animal sentience, public education, conservation, and moral responsibility.',
+    href: `${baseUrl}writing/writing-sample-ottley.pdf`,
+    tags: ['Ethics', 'Animal philosophy', 'Argument'],
+  },
+  {
+    title: 'Foucault and Information Technologies: The Owl of Minerva',
+    description:
+      'A political philosophy essay connecting discipline, surveillance, and information technologies through Foucault.',
+    href: `${baseUrl}writing/writing-sample-ii-ottley-james.pdf`,
+    tags: ['Political theory', 'Technology', 'Foucault'],
+  },
+  {
+    title: 'Transcendence of Film to Art through Content-Imagination',
+    description:
+      'A philosophy of art paper examining how film can create content-imagination and simulated belief.',
+    href: `${baseUrl}writing/writing-sample-iii-ottley-james.pdf`,
+    tags: ['Aesthetics', 'Film', 'Analysis'],
   },
 ]
 
@@ -262,7 +318,7 @@ function App() {
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         >
           <p className="role-line">Financial Analyst - Philosophy and Political Science</p>
-          <h1>Patrick Ottley.</h1>
+          <h1>Patrick Ottley</h1>
           <p className="hero-statement">
             I turn complex information into clear judgment for finance, strategy, and client-facing decisions.
           </p>
@@ -411,6 +467,70 @@ function App() {
         </div>
       </Section>
 
+      <Section
+        id="builds"
+        label="Public Builds"
+        title="Public builds"
+        intro="A few public projects and sites that show the same bias toward practical, polished execution."
+      >
+        <div className="build-grid">
+          {publicBuilds.map(({ title, type, description, sourceUrl, liveUrl, tags }) => (
+            <article className="build-card" key={title}>
+              <div className="card-topline">
+                <FolderOpen size={22} aria-hidden="true" />
+                <span>{type}</span>
+              </div>
+              <a className="card-title-link" href={sourceUrl} target="_blank" rel="noreferrer">
+                <h3>{title}</h3>
+                <ArrowUpRight size={18} aria-hidden="true" />
+              </a>
+              <p>{description}</p>
+              <div className="tag-row">
+                {tags.map((tag) => (
+                  <span key={tag}>{tag}</span>
+                ))}
+              </div>
+              <div className="resource-actions">
+                <a href={liveUrl} target="_blank" rel="noreferrer" aria-label={`${title} live site`}>
+                  <ArrowUpRight size={16} aria-hidden="true" />
+                  Live site
+                </a>
+              </div>
+            </article>
+          ))}
+        </div>
+      </Section>
+
+      <Section
+        id="writing"
+        label="Writing Samples"
+        title="Writing samples"
+        intro="Selected academic writing that reflects Patrick's research discipline, argument structure, and analytical range."
+      >
+        <div className="writing-grid">
+          {writingSamples.map(({ title, description, href, tags }) => (
+            <article className="writing-card" key={title}>
+              <div className="writing-card-main">
+                <div className="card-topline">
+                  <FileText size={22} aria-hidden="true" />
+                  <span>PDF sample</span>
+                </div>
+                <a className="card-title-link" href={href} target="_blank" rel="noreferrer">
+                  <h3>{title}</h3>
+                  <ArrowUpRight size={18} aria-hidden="true" />
+                </a>
+                <p>{description}</p>
+                <div className="tag-row">
+                  {tags.map((tag) => (
+                    <span key={tag}>{tag}</span>
+                  ))}
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </Section>
+
       <section id="contact" className="contact-section">
         <div className="availability">
           <span aria-hidden="true" />
@@ -438,7 +558,7 @@ function App() {
       </section>
 
       <footer className="site-footer">
-        <span>© 2026 Patrick Ottley</span>
+        <span>Copyright 2026 Patrick Ottley</span>
         <span>Built with Vite, React, and Framer Motion</span>
       </footer>
     </main>
