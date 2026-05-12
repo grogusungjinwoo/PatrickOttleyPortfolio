@@ -1,8 +1,12 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'vitest'
 import App from './App'
 
 describe('Patrick Ottley portfolio', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
   it('renders the concise professional portfolio content and public links', () => {
     render(<App />)
 
@@ -73,5 +77,24 @@ describe('Patrick Ottley portfolio', () => {
       screen.getByText(/available for paraplanning and registered client service associate roles/i),
     ).toBeInTheDocument()
     expect(screen.getByText(/available for entry-level project manager roles/i)).toBeInTheDocument()
+  })
+
+  it('renders the scaffolded Verdant Umbra reader with replaceable PDF links', () => {
+    render(<App />)
+
+    expect(screen.getByRole('heading', { name: 'Verdant Umbra' })).toBeInTheDocument()
+    expect(screen.getByText(/draft chapters i-iii/i)).toBeInTheDocument()
+    expect(screen.getByTitle('Verdant Umbra PDF reader')).toHaveAttribute(
+      'src',
+      '/PatrickOttleyPortfolio/writing/verdant-umbra-draft.pdf',
+    )
+    expect(screen.getByRole('link', { name: /open pdf/i })).toHaveAttribute(
+      'href',
+      '/PatrickOttleyPortfolio/writing/verdant-umbra-draft.pdf',
+    )
+    expect(screen.getByRole('link', { name: /download draft/i })).toHaveAttribute(
+      'href',
+      '/PatrickOttleyPortfolio/writing/verdant-umbra-draft.pdf',
+    )
   })
 })
