@@ -1,6 +1,46 @@
-import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
+
+vi.mock('pdfjs-dist', () => ({
+  GlobalWorkerOptions: {
+    workerSrc: '',
+  },
+  getDocument: () => ({
+    promise: Promise.resolve({
+      destroy: vi.fn(),
+      getPage: vi.fn(),
+      numPages: 59,
+    }),
+  }),
+}))
+
+vi.mock('pdfjs-dist/build/pdf.worker.min.mjs?url', () => ({
+  default: '/mock-pdf-worker.mjs',
+}))
+
+vi.mock('react-pageflip', async () => {
+  const React = await import('react')
+
+  return {
+    default: React.forwardRef<
+      { pageFlip: () => { flipNext: () => void; flipPrev: () => void; getCurrentPageIndex: () => number; getPageCount: () => number; turnToPage: (page: number) => void } },
+      { children: React.ReactNode; className?: string; onFlip?: (event: { data: number }) => void }
+    >(({ children, className, onFlip }, ref) => {
+      React.useImperativeHandle(ref, () => ({
+        pageFlip: () => ({
+          flipNext: () => onFlip?.({ data: 1 }),
+          flipPrev: () => onFlip?.({ data: 0 }),
+          getCurrentPageIndex: () => 0,
+          getPageCount: () => React.Children.count(children),
+          turnToPage: (page: number) => onFlip?.({ data: page }),
+        }),
+      }))
+
+      return <div className={className}>{children}</div>
+    }),
+  }
+})
 
 describe('Patrick Ottley portfolio', () => {
   afterEach(() => {
@@ -79,15 +119,31 @@ describe('Patrick Ottley portfolio', () => {
     expect(screen.getByText(/available for entry-level project manager roles/i)).toBeInTheDocument()
   })
 
-  it('renders the scaffolded Verdant Umbra reader with replaceable PDF links', () => {
+  it('renders the Verdant Umbra flipbook reader with replaceable PDF links', async () => {
     render(<App />)
 
     expect(screen.getByRole('heading', { name: 'Verdant Umbra' })).toBeInTheDocument()
     expect(screen.getByText(/draft chapters i-iii/i)).toBeInTheDocument()
-    expect(screen.getByTitle('Verdant Umbra PDF reader')).toHaveAttribute(
-      'src',
-      '/PatrickOttleyPortfolio/writing/verdant-umbra-draft.pdf',
-    )
+    expect(screen.queryByTitle('Verdant Umbra PDF reader')).not.toBeInTheDocument()
+    expect(screen.getByRole('region', { name: /verdant umbra flipbook reader/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /previous page/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /next page/i })).toBeInTheDocument()
+    expect(screen.getByText(/page 1 of 59/i)).toBeInTheDocument()
+
+    const reader = screen.getByRole('region', { name: /verdant umbra flipbook reader/i })
+    fireEvent.click(within(reader).getByRole('button', { name: /next page/i }))
+    expect(screen.getByText(/page 2 of 59/i)).toBeInTheDocument()
+    fireEvent.click(within(reader).getByRole('button', { name: /previous page/i }))
+    expect(screen.getByText(/page 1 of 59/i)).toBeInTheDocument()
+
+    fireEvent.click(within(reader).getByRole('button', { name: /turn forward/i }))
+    expect(screen.getByText(/page 2 of 59/i)).toBeInTheDocument()
+    fireEvent.click(within(reader).getByRole('button', { name: /turn back/i }))
+    expect(screen.getByText(/page 1 of 59/i)).toBeInTheDocument()
+
+    fireEvent.wheel(reader, { deltaY: 120 })
+    expect(screen.getByText(/page 2 of 59/i)).toBeInTheDocument()
+
     expect(screen.getByRole('link', { name: /open pdf/i })).toHaveAttribute(
       'href',
       '/PatrickOttleyPortfolio/writing/verdant-umbra-draft.pdf',

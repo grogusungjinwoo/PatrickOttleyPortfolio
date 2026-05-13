@@ -23,6 +23,7 @@ import {
   User,
 } from 'lucide-react'
 import './App.css'
+import { VerdantBookReader } from './components/VerdantBookReader'
 
 const baseUrl = '/PatrickOttleyPortfolio/'
 const portraitUrl = `${baseUrl}assets/patrick-ottley.jpg`
@@ -559,46 +560,12 @@ function App() {
         title={featuredBook.title}
         intro="A developing fiction manuscript presented as an in-portfolio reading experience."
       >
-        <motion.div
-          className="book-reader-shell"
-          initial={reduceMotion ? false : { opacity: 0, y: 24, rotateY: -7 }}
-          whileInView={reduceMotion ? undefined : { opacity: 1, y: 0, rotateY: 0 }}
-          viewport={{ once: true, amount: 0.22 }}
-          transition={{ duration: 0.78, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <div className="book-reader-copy">
-            <div className="card-topline">
-              <FileText size={22} aria-hidden="true" />
-              <span>Book draft</span>
-            </div>
-            <h3>{featuredBook.edition}</h3>
-            <p>
-              Read the current manuscript draft directly on the page, with the PDF kept as a replaceable writing asset
-              for future Verdant Umbra revisions.
-            </p>
-            <div className="book-reader-stats" aria-label="Verdant Umbra draft details">
-              <span>{featuredBook.pageCount} pages</span>
-              <span>PDF manuscript</span>
-            </div>
-            <div className="book-reader-actions">
-              <a href={featuredBookUrl} target="_blank" rel="noreferrer">
-                <ArrowUpRight size={16} aria-hidden="true" />
-                Open PDF
-              </a>
-              <a href={featuredBookUrl} download>
-                <Download size={16} aria-hidden="true" />
-                Download Draft
-              </a>
-            </div>
-          </div>
-          <div className="book-reader-frame" aria-label={`${featuredBook.title} embedded PDF`}>
-            <iframe
-              src={featuredBookUrl}
-              title={`${featuredBook.title} PDF reader`}
-              loading="lazy"
-            />
-          </div>
-        </motion.div>
+        <VerdantBookReader
+          edition={featuredBook.edition}
+          initialPageCount={featuredBook.pageCount}
+          pdfUrl={featuredBookUrl}
+          title={featuredBook.title}
+        />
       </Section>
 
       <section id="contact" className="contact-section">
