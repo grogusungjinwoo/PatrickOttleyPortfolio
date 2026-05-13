@@ -170,6 +170,52 @@ const publicBuilds = [
   },
 ]
 
+const lifeProject = {
+  liveUrl: 'https://grogusungjinwoo.github.io/David-Attenborough-s-Life-On-Our-Planet/',
+  sourceUrl: 'https://github.com/grogusungjinwoo/David-Attenborough-s-Life-On-Our-Planet',
+  modes: [
+    {
+      label: 'Wild space',
+      icon: Mountain,
+      status: 'Habitat pressure scan',
+      detail: 'Maps changing wild space, population pressure, and protected-area signals across a historical timeline.',
+    },
+    {
+      label: 'Species',
+      icon: Network,
+      status: 'Species risk lens',
+      detail: 'Surfaces conservation stories, extinction pressure, and recovery signals through a compact intelligence panel.',
+    },
+    {
+      label: 'Timeline',
+      icon: LineChart,
+      status: 'Timeline lens',
+      detail: 'Connects Attenborough witness years to shifts in population, carbon, biodiversity, and wild-space coverage.',
+    },
+  ],
+  stats: [
+    { value: '3', label: 'Atlas modes' },
+    { value: '4', label: 'Timeline eras' },
+    { value: 'Live', label: 'GitHub Pages build' },
+  ],
+  timeline: [
+    { year: '1937', label: 'Baseline', metric: 'Wild space high' },
+    { year: '1978', label: 'Acceleration', metric: 'Population pressure' },
+    { year: '1997', label: 'Warning', metric: 'Carbon climb' },
+    { year: '2020', label: 'Witness', metric: 'Restoration lens' },
+  ],
+  signals: [
+    {
+      title: 'Conservation signals',
+      value: 'Protected area, species risk, and climate pressure layers',
+    },
+    {
+      title: 'Interface model',
+      value: 'Dense atlas console with map controls, timeline playback, and source-backed cards',
+    },
+  ],
+}
+
 const writingSamples = [
   {
     title: 'Philosophy of Animals: Morality of Zoos',
@@ -304,6 +350,7 @@ function Section({
 function App() {
   const activeSection = useActiveSection(sectionIds)
   const reduceMotion = useReducedMotion()
+  const [activePlanetMode, setActivePlanetMode] = useState(lifeProject.modes[0])
 
   return (
     <main className="portfolio-shell">
@@ -566,6 +613,109 @@ function App() {
           pdfUrl={featuredBookUrl}
           title={featuredBook.title}
         />
+      </Section>
+
+      <Section
+        id="life-on-our-planet"
+        label="Interactive Build"
+        title="Life On Our Planet atlas"
+        intro="A portfolio-native preview of an ecological timeline and conservation interface inspired by the David Attenborough witness-statement project."
+      >
+        <div className="planet-preview-shell" role="region" aria-label="Life On Our Planet atlas preview">
+          <aside className="planet-preview-rail" aria-label="Atlas preview modes">
+            <div className="planet-preview-brand">
+              <span>Life</span>
+              <strong>Atlas</strong>
+            </div>
+            <div className="planet-preview-modes">
+              {lifeProject.modes.map(({ icon: Icon, label, status, detail }) => {
+                const isActive = activePlanetMode.label === label
+
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    className={isActive ? 'is-active' : undefined}
+                    aria-pressed={isActive}
+                    onClick={() => setActivePlanetMode({ icon: Icon, label, status, detail })}
+                  >
+                    <Icon size={17} aria-hidden="true" />
+                    <span>{label}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </aside>
+
+          <div className="planet-preview-stage">
+            <div className="planet-preview-toolbar">
+              <span>Atlas status</span>
+              <strong>{activePlanetMode.status}</strong>
+            </div>
+            <div className="planet-preview-world" aria-hidden="true">
+              <span className="planet-preview-gridline" />
+              <span className="planet-preview-pin planet-preview-pin-a">Amazon</span>
+              <span className="planet-preview-pin planet-preview-pin-b">Arctic</span>
+              <span className="planet-preview-pin planet-preview-pin-c">Coral</span>
+            </div>
+            <div className="planet-preview-readout">
+              <p>{activePlanetMode.detail}</p>
+              <div className="planet-preview-stats" aria-label="Life On Our Planet atlas metrics">
+                {lifeProject.stats.map((stat) => (
+                  <div key={stat.label}>
+                    <strong>{stat.value}</strong>
+                    <span>{stat.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <aside className="planet-preview-panel" aria-label="Atlas intelligence panel">
+            <div className="planet-preview-panel-heading">
+              <span>Witness panel</span>
+              <h3>Attenborough project interface</h3>
+              <p>
+                A public build that turns environmental history into a searchable, layered console for exploring
+                pressure, loss, and restoration.
+              </p>
+            </div>
+            <div className="planet-preview-signal-list">
+              {lifeProject.signals.map((signal) => (
+                <article key={signal.title}>
+                  <span>{signal.title}</span>
+                  <p>{signal.value}</p>
+                </article>
+              ))}
+            </div>
+            <div className="planet-preview-actions">
+              <a href={lifeProject.liveUrl} target="_blank" rel="noreferrer">
+                <ArrowUpRight size={16} aria-hidden="true" />
+                Open live atlas
+              </a>
+              <a href={lifeProject.sourceUrl} target="_blank" rel="noreferrer">
+                <FolderOpen size={16} aria-hidden="true" />
+                View source
+              </a>
+            </div>
+          </aside>
+
+          <div className="planet-preview-timeline" aria-label="Timeline lens">
+            <div className="planet-preview-timeline-heading">
+              <span>Timeline lens</span>
+              <strong>Witness years and ecological pressure</strong>
+            </div>
+            <div className="planet-preview-timeline-track">
+              {lifeProject.timeline.map((era) => (
+                <article key={era.year}>
+                  <strong>{era.year}</strong>
+                  <span>{era.label}</span>
+                  <small>{era.metric}</small>
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
       </Section>
 
       <section id="contact" className="contact-section">

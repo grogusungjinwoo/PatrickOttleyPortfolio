@@ -153,4 +153,23 @@ describe('Patrick Ottley portfolio', () => {
       '/PatrickOttleyPortfolio/writing/verdant-umbra-draft.pdf',
     )
   })
+
+  it('renders the Life On Our Planet atlas preview with project links', () => {
+    render(<App />)
+
+    expect(screen.getByRole('heading', { name: 'Life On Our Planet atlas' })).toBeInTheDocument()
+    expect(screen.getByText(/ecological timeline and conservation interface/i)).toBeInTheDocument()
+    expect(screen.getByText(/atlas status/i)).toBeInTheDocument()
+    expect(screen.getByText(/timeline lens/i)).toBeInTheDocument()
+    expect(screen.getByText(/conservation signals/i)).toBeInTheDocument()
+
+    expect(screen.getByRole('link', { name: /open live atlas/i })).toHaveAttribute(
+      'href',
+      'https://grogusungjinwoo.github.io/David-Attenborough-s-Life-On-Our-Planet/',
+    )
+    expect(screen.getByRole('link', { name: /view source/i })).toHaveAttribute(
+      'href',
+      'https://github.com/grogusungjinwoo/David-Attenborough-s-Life-On-Our-Planet',
+    )
+  })
 })
