@@ -31,10 +31,12 @@ const resumeUrl = `${baseUrl}JPO.Resume.pdf`
 const featuredBook = {
   title: 'Verdant Umbra',
   edition: 'Draft chapters I-III',
-  pdfPath: 'writing/verdant-umbra-draft.pdf',
   pageCount: 59,
 }
-const featuredBookUrl = `${baseUrl}${featuredBook.pdfPath}`
+const featuredBookPageUrls = Array.from(
+  { length: featuredBook.pageCount },
+  (_, index) => `${baseUrl}writing/verdant-umbra-pages/page-${String(index + 1).padStart(3, '0')}.jpg`,
+)
 
 const navItems = [
   { id: 'hero', label: 'Home', icon: Home },
@@ -167,6 +169,15 @@ const publicBuilds = [
     sourceUrl: 'https://github.com/grogusungjinwoo/Brokerage-Simulator',
     liveUrl: 'https://grogusungjinwoo.github.io/Brokerage-Simulator/',
     tags: ['Finance UI', 'Portfolio', 'Simulation'],
+  },
+  {
+    title: 'Streaming App',
+    type: 'Media recorder app',
+    description:
+      'A browser-based camera and microphone recording app with local preview, review, and export workflows.',
+    sourceUrl: 'https://github.com/grogusungjinwoo/Streaming-App',
+    liveUrl: 'https://grogusungjinwoo.github.io/Streaming-App/',
+    tags: ['Recording', 'Media capture', 'Local export'],
   },
 ]
 
@@ -609,8 +620,7 @@ function App() {
       >
         <VerdantBookReader
           edition={featuredBook.edition}
-          initialPageCount={featuredBook.pageCount}
-          pdfUrl={featuredBookUrl}
+          pageImageUrls={featuredBookPageUrls}
           title={featuredBook.title}
         />
       </Section>

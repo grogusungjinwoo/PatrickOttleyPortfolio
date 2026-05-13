@@ -2,23 +2,6 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 
-vi.mock('pdfjs-dist', () => ({
-  GlobalWorkerOptions: {
-    workerSrc: '',
-  },
-  getDocument: () => ({
-    promise: Promise.resolve({
-      destroy: vi.fn(),
-      getPage: vi.fn(),
-      numPages: 59,
-    }),
-  }),
-}))
-
-vi.mock('pdfjs-dist/build/pdf.worker.min.mjs?url', () => ({
-  default: '/mock-pdf-worker.mjs',
-}))
-
 vi.mock('react-pageflip', async () => {
   const React = await import('react')
 
@@ -87,6 +70,14 @@ describe('Patrick Ottley portfolio', () => {
       'href',
       'https://grogusungjinwoo.github.io/Brokerage-Simulator/',
     )
+    expect(screen.getByRole('link', { name: 'Streaming App' })).toHaveAttribute(
+      'href',
+      'https://github.com/grogusungjinwoo/Streaming-App',
+    )
+    expect(screen.getByRole('link', { name: 'Streaming App live site' })).toHaveAttribute(
+      'href',
+      'https://grogusungjinwoo.github.io/Streaming-App/',
+    )
     expect(screen.getByRole('link', { name: /morality of zoos/i })).toHaveAttribute(
       'href',
       '/PatrickOttleyPortfolio/writing/writing-sample-ottley.pdf',
@@ -119,13 +110,15 @@ describe('Patrick Ottley portfolio', () => {
     expect(screen.getByText(/available for entry-level project manager roles/i)).toBeInTheDocument()
   })
 
-  it('renders the Verdant Umbra flipbook reader with replaceable PDF links', async () => {
+  it('renders the Verdant Umbra flipbook reader as an animated book with static pages', async () => {
     render(<App />)
 
     expect(screen.getByRole('heading', { name: 'Verdant Umbra' })).toBeInTheDocument()
     expect(screen.getByText(/draft chapters i-iii/i)).toBeInTheDocument()
     expect(screen.queryByTitle('Verdant Umbra PDF reader')).not.toBeInTheDocument()
     expect(screen.getByRole('region', { name: /verdant umbra flipbook reader/i })).toBeInTheDocument()
+    expect(screen.getByText(/animated book edition/i)).toBeInTheDocument()
+    expect(screen.queryByText(/replaceable pdf asset/i)).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /previous page/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /next page/i })).toBeInTheDocument()
     expect(screen.getByText(/page 1 of 59/i)).toBeInTheDocument()
@@ -144,14 +137,8 @@ describe('Patrick Ottley portfolio', () => {
     fireEvent.wheel(reader, { deltaY: 120 })
     expect(screen.getByText(/page 2 of 59/i)).toBeInTheDocument()
 
-    expect(screen.getByRole('link', { name: /open pdf/i })).toHaveAttribute(
-      'href',
-      '/PatrickOttleyPortfolio/writing/verdant-umbra-draft.pdf',
-    )
-    expect(screen.getByRole('link', { name: /download draft/i })).toHaveAttribute(
-      'href',
-      '/PatrickOttleyPortfolio/writing/verdant-umbra-draft.pdf',
-    )
+    expect(screen.queryByRole('link', { name: /open pdf/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /download draft/i })).not.toBeInTheDocument()
   })
 
   it('renders the Life On Our Planet atlas preview with project links', () => {
@@ -159,9 +146,10 @@ describe('Patrick Ottley portfolio', () => {
 
     expect(screen.getByRole('heading', { name: 'Life On Our Planet atlas' })).toBeInTheDocument()
     expect(screen.getByText(/ecological timeline and conservation interface/i)).toBeInTheDocument()
-    expect(screen.getByText(/atlas status/i)).toBeInTheDocument()
-    expect(screen.getByText(/timeline lens/i)).toBeInTheDocument()
-    expect(screen.getByText(/conservation signals/i)).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /static preview of the life on our planet atlas interface/i })).toHaveAttribute(
+      'src',
+      '/PatrickOttleyPortfolio/assets/life-on-our-planet-atlas.png',
+    )
 
     expect(screen.getByRole('link', { name: /open live atlas/i })).toHaveAttribute(
       'href',

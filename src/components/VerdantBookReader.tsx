@@ -11,32 +11,11 @@ import {
 } from 'react'
 import { useReducedMotion } from 'framer-motion'
 import HTMLFlipBook from 'react-pageflip'
-import { ArrowLeft, ArrowRight, ArrowUpRight, Download } from 'lucide-react'
+import { ArrowLeft, ArrowRight, BookOpen } from 'lucide-react'
 
-type RenderStatus = 'queued' | 'rendering' | 'ready' | 'error'
-
-type RenderedPage = {
-  imageUrl?: string
+type BookPageAsset = {
+  imageUrl: string
   pageNumber: number
-  status: RenderStatus
-}
-
-type PdfViewport = {
-  height: number
-  width: number
-}
-
-type PdfPage = {
-  getViewport: (options: { scale: number }) => PdfViewport
-  render: (options: { canvasContext: CanvasRenderingContext2D; viewport: PdfViewport }) => {
-    promise: Promise<void>
-  }
-}
-
-type PdfDocument = {
-  destroy?: () => Promise<void> | void
-  getPage: (pageNumber: number) => Promise<PdfPage>
-  numPages: number
 }
 
 type PageFlipApi = {
@@ -51,95 +30,21 @@ type FlipBookRef = {
 
 type VerdantBookReaderProps = {
   edition: string
-  initialPageCount: number
-  pdfUrl: string
+  pageImageUrls: string[]
   title: string
 }
 
-const PAGE_RENDER_WIDTH = 620
-const MOBILE_PAGE_RENDER_WIDTH = 420
-const MAX_RENDER_PIXEL_RATIO = 1
 const PRELOAD_BEFORE = 1
 const PRELOAD_AFTER = 2
 const WHEEL_TURN_THRESHOLD = 72
 const WHEEL_TURN_COOLDOWN_MS = 260
 
-function makePageSlots(count: number): RenderedPage[] {
-  return Array.from({ length: count }, (_, index) => ({
+function makePageAssets(pageImageUrls: string[]) {
+  return pageImageUrls.map((imageUrl, index) => ({
+    imageUrl,
     pageNumber: index + 1,
-    status: 'queued',
   }))
 }
-
-function getPageRenderWidth() {
-  return window.innerWidth <= 480 ? MOBILE_PAGE_RENDER_WIDTH : PAGE_RENDER_WIDTH
-}
-
-function waitForIdleTurn() {
-  return new Promise<void>((resolve) => {
-    window.setTimeout(resolve, 16)
-  })
-}
-
-async function renderPdfPage(pdf: PdfDocument, pageNumber: number) {
-  const page = await pdf.getPage(pageNumber)
-  const baseViewport = page.getViewport({ scale: 1 })
-  const pixelRatio = Math.min(window.devicePixelRatio || 1, MAX_RENDER_PIXEL_RATIO)
-  const scale = (getPageRenderWidth() / baseViewport.width) * pixelRatio
-  const viewport = page.getViewport({ scale })
-  const canvas = document.createElement('canvas')
-  const context = canvas.getContext('2d')
-
-  if (!context) {
-    throw new Error('Canvas rendering is unavailable in this browser.')
-  }
-
-  canvas.width = Math.ceil(viewport.width)
-  canvas.height = Math.ceil(viewport.height)
-  await page.render({ canvasContext: context, viewport }).promise
-
-  return new Promise<string>((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) {
-          reject(new Error('The manuscript page could not be prepared.'))
-          return
-        }
-
-        resolve(URL.createObjectURL(blob))
-      },
-      'image/jpeg',
-      0.86,
-    )
-  })
-}
-
-async function loadPdfDocument(pdfUrl: string) {
-  const [pdfjsLib, workerModule] = await Promise.all([
-    import('pdfjs-dist'),
-    import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
-  ])
-
-  pdfjsLib.GlobalWorkerOptions.workerSrc = workerModule.default
-
-  return (await pdfjsLib.getDocument(pdfUrl).promise) as unknown as PdfDocument
-}
-
-const FlipPage = forwardRef<HTMLDivElement, { page: RenderedPage; title: string }>(({ page, title }, ref) => (
-  <div className="book-page" ref={ref}>
-    <div className="book-page-paper">
-      {page.status === 'ready' && page.imageUrl ? (
-        <img src={page.imageUrl} alt={`${title} manuscript page ${page.pageNumber}`} draggable="false" />
-      ) : (
-        <div className="book-page-placeholder" aria-label={`Loading ${title} page ${page.pageNumber}`}>
-          <span>Page {page.pageNumber}</span>
-        </div>
-      )}
-    </div>
-  </div>
-))
-
-FlipPage.displayName = 'FlipPage'
 
 function getFlipPageIndex(eventData: unknown) {
   return typeof eventData === 'number' && Number.isFinite(eventData) ? eventData : 0
@@ -154,41 +59,56 @@ function clampPage(page: number, pageCount: number) {
 }
 
 function getPreloadPageNumbers(currentPage: number, pageCount: number) {
+  if (pageCount <= 0) return []
+
   const currentPageNumber = currentPage + 1
   const firstPage = Math.max(1, currentPageNumber - PRELOAD_BEFORE)
   const lastPage = Math.min(pageCount, currentPageNumber + PRELOAD_AFTER)
 
-  return Array.from({ length: lastPage - firstPage + 1 }, (_, index) => index + firstPage).sort((a, b) => {
-    const distance = Math.abs(a - currentPageNumber) - Math.abs(b - currentPageNumber)
-
-    return distance === 0 ? a - b : distance
-  })
+  return Array.from({ length: lastPage - firstPage + 1 }, (_, index) => index + firstPage)
 }
 
-function revokeRenderedUrl(imageUrl: string) {
-  URL.revokeObjectURL(imageUrl)
-}
+const FlipPage = forwardRef<
+  HTMLDivElement,
+  { isPreloaded: boolean; page: BookPageAsset; title: string }
+>(({ isPreloaded, page, title }, ref) => (
+  <div className="book-page" ref={ref}>
+    <div className="book-page-paper">
+      {isPreloaded ? (
+        <img
+          src={page.imageUrl}
+          alt={`${title} manuscript page ${page.pageNumber}`}
+          draggable="false"
+          loading={page.pageNumber <= 2 ? 'eager' : 'lazy'}
+        />
+      ) : (
+        <div className="book-page-placeholder" aria-label={`Preparing ${title} page ${page.pageNumber}`}>
+          <span>Page {page.pageNumber}</span>
+        </div>
+      )}
+    </div>
+  </div>
+))
 
-export function VerdantBookReader({ edition, initialPageCount, pdfUrl, title }: VerdantBookReaderProps) {
+FlipPage.displayName = 'FlipPage'
+
+export function VerdantBookReader({ edition, pageImageUrls, title }: VerdantBookReaderProps) {
   const reduceMotion = useReducedMotion()
+  const pages = useMemo(() => makePageAssets(pageImageUrls), [pageImageUrls])
+  const pageCount = pages.length
   const [currentPage, setCurrentPage] = useState(0)
-  const [loadError, setLoadError] = useState<string | null>(null)
-  const [pageCount, setPageCount] = useState(initialPageCount)
-  const [pdfReadyKey, setPdfReadyKey] = useState(0)
-  const [pages, setPages] = useState<RenderedPage[]>(() => makePageSlots(initialPageCount))
   const currentPageRef = useRef(0)
   const flipBookRef = useRef<FlipBookRef | null>(null)
   const readerShellRef = useRef<HTMLDivElement | null>(null)
-  const pdfDocumentRef = useRef<PdfDocument | null>(null)
-  const renderedPageUrlsRef = useRef(new Map<number, string>())
-  const renderingPagesRef = useRef(new Set<number>())
   const suppressStageClickRef = useRef(false)
   const turnDragStartRef = useRef<{ x: number; y: number } | null>(null)
   const wheelDeltaRef = useRef(0)
   const wheelTurnCooldownRef = useRef(false)
 
-  const readyPageCount = useMemo(() => pages.filter((page) => page.status === 'ready').length, [pages])
-  const isRendering = useMemo(() => pages.some((page) => page.status === 'rendering'), [pages])
+  const preloadedPageSet = useMemo(
+    () => new Set(getPreloadPageNumbers(currentPage, pageCount)),
+    [currentPage, pageCount],
+  )
 
   const updateCurrentPage = useCallback(
     (page: number) => {
@@ -211,121 +131,6 @@ export function VerdantBookReader({ edition, initialPageCount, pdfUrl, title }: 
     },
     [pageCount, updateCurrentPage],
   )
-
-  useEffect(() => {
-    let cancelled = false
-    const renderedPageUrls = renderedPageUrlsRef.current
-    const renderingPages = renderingPagesRef.current
-
-    async function loadBook() {
-      try {
-        setLoadError(null)
-        renderedPageUrls.forEach(revokeRenderedUrl)
-        renderedPageUrls.clear()
-        renderingPages.clear()
-        pdfDocumentRef.current = null
-        setPageCount(initialPageCount)
-        setPages(makePageSlots(initialPageCount))
-
-        const loadedPdf = await loadPdfDocument(pdfUrl)
-
-        if (cancelled) return
-
-        pdfDocumentRef.current = loadedPdf
-        setPageCount(loadedPdf.numPages)
-        setPages(makePageSlots(loadedPdf.numPages))
-        setPdfReadyKey((key) => key + 1)
-      } catch {
-        if (!cancelled) {
-          setLoadError('The book reader could not load the manuscript in this browser.')
-        }
-      }
-    }
-
-    void loadBook()
-
-    return () => {
-      cancelled = true
-      renderedPageUrls.forEach(revokeRenderedUrl)
-      renderedPageUrls.clear()
-      renderingPages.clear()
-      const pdfDocument = pdfDocumentRef.current
-      pdfDocumentRef.current = null
-      void pdfDocument?.destroy?.()
-    }
-  }, [initialPageCount, pdfUrl])
-
-  useEffect(() => {
-    const pdfDocument = pdfDocumentRef.current
-
-    if (!pdfDocument || loadError) return
-
-    const activePdfDocument = pdfDocument
-    let cancelled = false
-    const preloadedPages = getPreloadPageNumbers(currentPage, pageCount)
-    const preloadedPageSet = new Set(preloadedPages)
-
-    renderedPageUrlsRef.current.forEach((imageUrl, pageNumber) => {
-      if (preloadedPageSet.has(pageNumber)) return
-
-      revokeRenderedUrl(imageUrl)
-      renderedPageUrlsRef.current.delete(pageNumber)
-    })
-
-    setPages((previousPages) =>
-      previousPages.map((page) => {
-        if (preloadedPageSet.has(page.pageNumber)) return page
-        if (page.status === 'ready') return { pageNumber: page.pageNumber, status: 'queued' }
-
-        return page
-      }),
-    )
-
-    async function renderVisiblePages() {
-      for (const pageNumber of preloadedPages) {
-        if (cancelled || renderedPageUrlsRef.current.has(pageNumber) || renderingPagesRef.current.has(pageNumber)) {
-          continue
-        }
-
-        renderingPagesRef.current.add(pageNumber)
-        setPages((previousPages) =>
-          previousPages.map((page) => (page.pageNumber === pageNumber ? { ...page, status: 'rendering' } : page)),
-        )
-
-        try {
-          const imageUrl = await renderPdfPage(activePdfDocument, pageNumber)
-
-          if (cancelled || !preloadedPageSet.has(pageNumber)) {
-            revokeRenderedUrl(imageUrl)
-            continue
-          }
-
-          renderedPageUrlsRef.current.set(pageNumber, imageUrl)
-          setPages((previousPages) =>
-            previousPages.map((page) =>
-              page.pageNumber === pageNumber ? { imageUrl, pageNumber, status: 'ready' } : page,
-            ),
-          )
-        } catch {
-          if (!cancelled) {
-            setPages((previousPages) =>
-              previousPages.map((page) => (page.pageNumber === pageNumber ? { ...page, status: 'error' } : page)),
-            )
-          }
-        } finally {
-          renderingPagesRef.current.delete(pageNumber)
-        }
-
-        await waitForIdleTurn()
-      }
-    }
-
-    void renderVisiblePages()
-
-    return () => {
-      cancelled = true
-    }
-  }, [currentPage, loadError, pageCount, pdfReadyKey])
 
   function handleFlip(event: { data?: unknown }) {
     updateCurrentPage(getFlipPageIndex(event.data))
@@ -469,27 +274,17 @@ export function VerdantBookReader({ edition, initialPageCount, pdfUrl, title }: 
     >
       <div className="book-reader-copy">
         <div className="card-topline">
-          <span>Book draft</span>
+          <BookOpen size={22} aria-hidden="true" />
+          <span>Animated book edition</span>
         </div>
         <h3>{edition}</h3>
         <p>
-          Read the current manuscript draft directly on the page, with turnable pages rendered from the replaceable PDF
-          asset.
+          Read the current manuscript as a turnable in-page book with enlarged pages, a cover, and tactile page
+          movement.
         </p>
         <div className="book-reader-stats" aria-label={`${title} draft details`}>
           <span>{pageCount} pages</span>
-          <span>{isRendering ? `${readyPageCount} ready` : 'Ready to read'}</span>
-        </div>
-        {loadError ? <p className="book-reader-error">{loadError}</p> : null}
-        <div className="book-reader-actions">
-          <a href={pdfUrl} target="_blank" rel="noreferrer">
-            <ArrowUpRight size={16} aria-hidden="true" />
-            Open PDF
-          </a>
-          <a href={pdfUrl} download>
-            <Download size={16} aria-hidden="true" />
-            Download Draft
-          </a>
+          <span>Static page art</span>
         </div>
       </div>
 
@@ -499,12 +294,12 @@ export function VerdantBookReader({ edition, initialPageCount, pdfUrl, title }: 
             <ArrowLeft size={16} aria-hidden="true" />
           </button>
           <span aria-live="polite">
-            Page {currentPage + 1} of {pageCount}
+            Page {pageCount === 0 ? 0 : currentPage + 1} of {pageCount}
           </span>
           <button
             type="button"
             onClick={goToNextPage}
-            disabled={currentPage >= pageCount - 1}
+            disabled={pageCount === 0 || currentPage >= pageCount - 1}
             aria-label="Next page"
           >
             <ArrowRight size={16} aria-hidden="true" />
@@ -513,21 +308,22 @@ export function VerdantBookReader({ edition, initialPageCount, pdfUrl, title }: 
 
         <div className="book-reader-stage" role="group" aria-label={`${title} turnable pages`}>
           <HTMLFlipBook
+            key={pageCount}
             ref={flipBookRef}
             autoSize
             className="verdant-flipbook"
             clickEventForward
             disableFlipByClick
             drawShadow={!reduceMotion}
-            flippingTime={reduceMotion ? 1 : 780}
-            height={594}
-            maxHeight={720}
-            maxShadowOpacity={0.35}
-            maxWidth={520}
-            minHeight={390}
-            minWidth={230}
+            flippingTime={reduceMotion ? 1 : 860}
+            height={760}
+            maxHeight={860}
+            maxShadowOpacity={0.42}
+            maxWidth={680}
+            minHeight={460}
+            minWidth={280}
             mobileScrollSupport
-            showCover={false}
+            showCover
             showPageCorners={!reduceMotion}
             size="stretch"
             startPage={0}
@@ -536,11 +332,16 @@ export function VerdantBookReader({ edition, initialPageCount, pdfUrl, title }: 
             swipeDistance={30}
             useMouseEvents
             usePortrait
-            width={459}
+            width={586}
             onFlip={handleFlip}
           >
             {pages.map((page) => (
-              <FlipPage key={page.pageNumber} page={page} title={title} />
+              <FlipPage
+                key={page.pageNumber}
+                isPreloaded={preloadedPageSet.has(page.pageNumber)}
+                page={page}
+                title={title}
+              />
             ))}
           </HTMLFlipBook>
           <div className="book-reader-turn-zones">

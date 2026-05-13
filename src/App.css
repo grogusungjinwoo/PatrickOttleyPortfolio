@@ -516,7 +516,7 @@
 }
 
 .build-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
 }
 
 .skills-grid {
@@ -633,7 +633,7 @@
 .book-reader-shell {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(260px, 0.42fr) minmax(0, 0.58fr);
+  grid-template-columns: minmax(220px, 0.28fr) minmax(0, 0.72fr);
   gap: 0;
   overflow: hidden;
   border: 1px solid var(--line);
@@ -649,7 +649,7 @@
   position: absolute;
   top: 18px;
   bottom: 18px;
-  left: 42%;
+  left: 28%;
   z-index: 2;
   width: 1px;
   background: linear-gradient(to bottom, transparent, rgba(214, 194, 161, 0.45), transparent);
@@ -660,8 +660,8 @@
 .book-reader-copy {
   display: flex;
   flex-direction: column;
-  min-height: 640px;
-  padding: 32px;
+  min-height: 800px;
+  padding: 28px;
   border-right: 1px solid var(--line);
   background:
     radial-gradient(circle at 10% 0%, rgba(214, 194, 161, 0.12), transparent 16rem),
@@ -672,7 +672,7 @@
   max-width: 360px;
   margin: 0;
   color: #fff;
-  font-size: 32px;
+  font-size: 30px;
   font-weight: 720;
   line-height: 1.05;
 }
@@ -681,7 +681,7 @@
   max-width: 430px;
   margin: 18px 0 0;
   color: var(--muted);
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.68;
 }
 
@@ -757,8 +757,8 @@
   display: grid;
   align-content: start;
   gap: 18px;
-  min-height: 640px;
-  padding: 20px;
+  min-height: 800px;
+  padding: 24px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 28%),
     rgba(255, 255, 255, 0.025);
@@ -813,7 +813,7 @@
 .book-reader-stage {
   position: relative;
   display: grid;
-  min-height: 556px;
+  min-height: 704px;
   place-items: center;
   overflow: hidden;
   border: 1px solid var(--line);
@@ -850,21 +850,36 @@
 }
 
 .verdant-flipbook {
-  filter: drop-shadow(0 28px 52px rgba(0, 0, 0, 0.38));
+  filter: drop-shadow(0 34px 62px rgba(0, 0, 0, 0.48));
 }
 
 .book-page {
+  position: relative;
   overflow: hidden;
-  background: #f4f1eb;
+  background: #efe5d3;
+  box-shadow:
+    inset 0 0 0 1px rgba(54, 38, 20, 0.14),
+    inset 18px 0 34px rgba(54, 38, 20, 0.1);
 }
 
 .book-page-paper {
+  position: relative;
   display: grid;
   width: 100%;
   height: 100%;
   place-items: center;
   overflow: hidden;
-  background: #f4f1eb;
+  background: #f7f1e5;
+}
+
+.book-page-paper::after {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(76, 48, 24, 0.16), transparent 10%, transparent 90%, rgba(76, 48, 24, 0.12)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 22%, rgba(76, 48, 24, 0.08));
+  content: '';
+  pointer-events: none;
 }
 
 .book-page img {
@@ -882,7 +897,7 @@
   place-items: center;
   background:
     linear-gradient(90deg, rgba(0, 0, 0, 0.06), transparent 18%),
-    #f4f1eb;
+    #f7f1e5;
   color: rgba(5, 5, 6, 0.44);
   font-size: 12px;
   font-weight: 800;
@@ -1515,7 +1530,11 @@
   }
 
   .book-reader-frame {
-    min-height: 620px;
+    min-height: 760px;
+  }
+
+  .book-reader-stage {
+    min-height: 674px;
   }
 }
 
@@ -1630,12 +1649,12 @@
   }
 
   .book-reader-frame {
-    min-height: 540px;
+    min-height: 620px;
     padding: 12px;
   }
 
   .book-reader-stage {
-    min-height: 438px;
+    min-height: 518px;
   }
 
   .book-reader-toolbar {
@@ -1666,7 +1685,7 @@
   }
 
   .book-reader-stage {
-    min-height: 396px;
+    min-height: 430px;
   }
 
   .book-reader-toolbar {
