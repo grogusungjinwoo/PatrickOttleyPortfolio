@@ -8,7 +8,6 @@ import {
   type KeyboardEvent,
   type MouseEvent,
   type PointerEvent,
-  type WheelEvent,
 } from 'react'
 import { useReducedMotion } from 'framer-motion'
 import HTMLFlipBook from 'react-pageflip'
@@ -179,6 +178,7 @@ export function VerdantBookReader({ edition, initialPageCount, pdfUrl, title }: 
   const [pages, setPages] = useState<RenderedPage[]>(() => makePageSlots(initialPageCount))
   const currentPageRef = useRef(0)
   const flipBookRef = useRef<FlipBookRef | null>(null)
+  const readerShellRef = useRef<HTMLDivElement | null>(null)
   const pdfDocumentRef = useRef<PdfDocument | null>(null)
   const renderedPageUrlsRef = useRef(new Map<number, string>())
   const renderingPagesRef = useRef(new Set<number>())
@@ -339,6 +339,57 @@ export function VerdantBookReader({ edition, initialPageCount, pdfUrl, title }: 
     turnToPage(currentPageRef.current + 1)
   }, [turnToPage])
 
+  const handleReaderWheel = useCallback(
+    (event: WheelEvent) => {
+      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return
+
+      const direction = event.deltaY > 0 ? 1 : -1
+      const isAtStart = currentPageRef.current === 0
+      const isAtEnd = currentPageRef.current >= pageCount - 1
+
+      if ((direction < 0 && isAtStart) || (direction > 0 && isAtEnd)) {
+        wheelDeltaRef.current = 0
+        return
+      }
+
+      event.preventDefault()
+      event.stopPropagation()
+      wheelDeltaRef.current += event.deltaY
+
+      if (wheelTurnCooldownRef.current || Math.abs(wheelDeltaRef.current) < WHEEL_TURN_THRESHOLD) return
+
+      const shouldTurnForward = wheelDeltaRef.current > 0
+      wheelDeltaRef.current = 0
+      wheelTurnCooldownRef.current = true
+
+      if (shouldTurnForward) {
+        goToNextPage()
+      } else {
+        goToPreviousPage()
+      }
+
+      window.setTimeout(
+        () => {
+          wheelTurnCooldownRef.current = false
+        },
+        reduceMotion ? 80 : WHEEL_TURN_COOLDOWN_MS,
+      )
+    },
+    [goToNextPage, goToPreviousPage, pageCount, reduceMotion],
+  )
+
+  useEffect(() => {
+    const readerShell = readerShellRef.current
+
+    if (!readerShell) return
+
+    readerShell.addEventListener('wheel', handleReaderWheel, { passive: false })
+
+    return () => {
+      readerShell.removeEventListener('wheel', handleReaderWheel)
+    }
+  }, [handleReaderWheel])
+
   function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
     if (event.key === 'ArrowLeft') {
       event.preventDefault()
@@ -349,41 +400,6 @@ export function VerdantBookReader({ edition, initialPageCount, pdfUrl, title }: 
       event.preventDefault()
       goToNextPage()
     }
-  }
-
-  function handleReaderWheel(event: WheelEvent<HTMLElement>) {
-    if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return
-
-    const direction = event.deltaY > 0 ? 1 : -1
-    const isAtStart = currentPageRef.current === 0
-    const isAtEnd = currentPageRef.current >= pageCount - 1
-
-    if ((direction < 0 && isAtStart) || (direction > 0 && isAtEnd)) {
-      wheelDeltaRef.current = 0
-      return
-    }
-
-    event.preventDefault()
-    wheelDeltaRef.current += event.deltaY
-
-    if (wheelTurnCooldownRef.current || Math.abs(wheelDeltaRef.current) < WHEEL_TURN_THRESHOLD) return
-
-    const shouldTurnForward = wheelDeltaRef.current > 0
-    wheelDeltaRef.current = 0
-    wheelTurnCooldownRef.current = true
-
-    if (shouldTurnForward) {
-      goToNextPage()
-    } else {
-      goToPreviousPage()
-    }
-
-    window.setTimeout(
-      () => {
-        wheelTurnCooldownRef.current = false
-      },
-      reduceMotion ? 80 : WHEEL_TURN_COOLDOWN_MS,
-    )
   }
 
   function handleBackwardZoneClick() {
@@ -444,12 +460,12 @@ export function VerdantBookReader({ edition, initialPageCount, pdfUrl, title }: 
 
   return (
     <div
+      ref={readerShellRef}
       className="book-reader-shell"
       role="region"
       aria-label={`${title} flipbook reader`}
       tabIndex={0}
       onKeyDown={handleKeyDown}
-      onWheel={handleReaderWheel}
     >
       <div className="book-reader-copy">
         <div className="card-topline">
