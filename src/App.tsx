@@ -23,6 +23,7 @@ import {
   User,
 } from 'lucide-react'
 import './App.css'
+import { NvdaHourChart } from './components/NvdaHourChart'
 import { VerdantBookReader } from './components/VerdantBookReader'
 
 const baseUrl = '/PatrickOttleyPortfolio/'
@@ -601,7 +602,7 @@ function App() {
           <div className="planet-preview-actions" aria-label="Life On Our Planet project links">
             <a href={lifeProject.liveUrl} target="_blank" rel="noreferrer">
               <ArrowUpRight size={16} aria-hidden="true" />
-              Open live atlas
+              Open Attenborough tribute
             </a>
             <a href={lifeProject.sourceUrl} target="_blank" rel="noreferrer">
               <FolderOpen size={16} aria-hidden="true" />
@@ -609,6 +610,7 @@ function App() {
             </a>
           </div>
         </div>
+        <NvdaHourChart />
       </Section>
 
       <section id="contact" className="contact-section">

@@ -1,6 +1,35 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
+
+const nvdaSession = {
+  symbol: 'NVDA',
+  sessionDate: '2026-05-13',
+  retrievedAt: '2026-05-13T22:43:52.992Z',
+  source: 'Yahoo Finance chart API',
+  candles: [
+    {
+      timestamp: '2026-05-13T13:30:00.000Z',
+      tradingDate: '2026-05-13',
+      session: 'regular',
+      open: 224.93,
+      high: 226.88,
+      low: 224.12,
+      close: 226.79,
+      volume: 16711694,
+    },
+    {
+      timestamp: '2026-05-13T14:30:00.000Z',
+      tradingDate: '2026-05-13',
+      session: 'regular',
+      open: 224.71,
+      high: 225.36,
+      low: 223.51,
+      close: 224.18,
+      volume: 4221480,
+    },
+  ],
+}
 
 vi.mock('react-pageflip', async () => {
   const React = await import('react')
@@ -26,8 +55,19 @@ vi.mock('react-pageflip', async () => {
 })
 
 describe('Patrick Ottley portfolio', () => {
+  beforeEach(() => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => nvdaSession,
+      })),
+    )
+  })
+
   afterEach(() => {
     cleanup()
+    vi.unstubAllGlobals()
   })
 
   it('renders the concise professional portfolio content and public links', () => {
@@ -141,7 +181,7 @@ describe('Patrick Ottley portfolio', () => {
     expect(screen.queryByRole('link', { name: /download draft/i })).not.toBeInTheDocument()
   })
 
-  it('renders the Life On Our Planet atlas preview with project links', () => {
+  it('renders the Life On Our Planet atlas preview with project links', async () => {
     render(<App />)
 
     expect(screen.getByRole('heading', { name: 'Life On Our Planet atlas' })).toBeInTheDocument()
@@ -151,13 +191,49 @@ describe('Patrick Ottley portfolio', () => {
       '/PatrickOttleyPortfolio/assets/life-on-our-planet-atlas.png',
     )
 
-    expect(screen.getByRole('link', { name: /open live atlas/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /open attenborough tribute/i })).toHaveAttribute(
       'href',
       'https://grogusungjinwoo.github.io/David-Attenborough-s-Life-On-Our-Planet/',
     )
     expect(screen.getByRole('link', { name: /view source/i })).toHaveAttribute(
       'href',
       'https://github.com/grogusungjinwoo/David-Attenborough-s-Life-On-Our-Planet',
+    )
+    expect(screen.getByRole('heading', { name: /nvda 1h modeled chart/i })).toBeInTheDocument()
+    expect(screen.getByText(/one-hour 3d model/i)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /open nvda at a glance/i })).toHaveAttribute(
+      'href',
+      'https://grogusungjinwoo.github.io/NVDA-at-a-Glance/',
+    )
+    expect(screen.getByRole('region', { name: /nvda 1 hour 3d modeled chart/i })).toBeInTheDocument()
+    expect(await screen.findByText(/yahoo finance chart api/i)).toBeInTheDocument()
+    expect(screen.getByText(/retrieved may 13, 2026/i)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringMatching(
+          /^https:\/\/grogusungjinwoo\.github\.io\/NVDA-at-a-Glance\/data\/nvda-session\.json\?t=/,
+        ),
+        { cache: 'no-store' },
+      )
+    })
+  })
+
+  it('keeps the NVDA link visible when the latest chart data cannot be fetched', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: false,
+        status: 503,
+      })),
+    )
+
+    render(<App />)
+
+    expect(screen.getByRole('heading', { name: /nvda 1h modeled chart/i })).toBeInTheDocument()
+    expect(await screen.findByText(/latest nvda chart data is temporarily unavailable/i)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /open nvda at a glance/i })).toHaveAttribute(
+      'href',
+      'https://grogusungjinwoo.github.io/NVDA-at-a-Glance/',
     )
   })
 })
