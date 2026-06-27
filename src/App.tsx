@@ -4,6 +4,7 @@ import {
   ArrowUpRight,
   BadgeCheck,
   BarChart3,
+  BookOpen,
   Briefcase,
   Download,
   FileText,
@@ -26,9 +27,14 @@ import './App.css'
 import { NvdaHourChart } from './components/NvdaHourChart'
 import { VerdantBookReader } from './components/VerdantBookReader'
 
-const baseUrl = '/PatrickOttleyPortfolio/'
-const portraitUrl = `${baseUrl}assets/patrick-ottley.jpg`
-const resumeUrl = `${baseUrl}JPO.Resume.pdf`
+function publicPath(path: string) {
+  const basePath = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`
+
+  return `${basePath}${path.replace(/^\/+/, '')}`
+}
+
+const portraitUrl = publicPath('assets/patrick-ottley.jpg')
+const resumeUrl = publicPath('JPO.Resume.pdf')
 const featuredBook = {
   title: 'Verdant Umbra',
   edition: 'Draft chapters I-III',
@@ -36,7 +42,7 @@ const featuredBook = {
 }
 const featuredBookPageUrls = Array.from(
   { length: featuredBook.pageCount },
-  (_, index) => `${baseUrl}writing/verdant-umbra-pages/page-${String(index + 1).padStart(3, '0')}.jpg`,
+  (_, index) => publicPath(`writing/verdant-umbra-pages/page-${String(index + 1).padStart(3, '0')}.jpg`),
 )
 
 const navItems = [
@@ -101,8 +107,9 @@ const experiences = [
     summary:
       'Used data, client management, and service operations to improve delivery performance, customer engagement, and local business workflows.',
     details: [
-      'Built KPI views with Excel, SQL, Tableau, and Power BI for a grocery delivery concierge startup.',
-      'Supported sales, client engagement, website design, cash handling, and hospitality service operations.',
+      'Walkin the Dog LLC (Dog Daycare): Supported daily dog daycare operations, client communication, and routine facility/customer service needs.',
+      'Concierge Resort Deliver (Start-up/Crew Lead): Coordinated grocery delivery workflows, crew handoffs, customer updates, and basic operational tracking.',
+      'Westin Riverfront: Served as restaurant waiter, busser, cafe waiter, and cashier in guest-facing hospitality operations.',
     ],
   },
 ]
@@ -185,7 +192,7 @@ const publicBuilds = [
 const lifeProject = {
   liveUrl: 'https://grogusungjinwoo.github.io/David-Attenborough-s-Life-On-Our-Planet/',
   sourceUrl: 'https://github.com/grogusungjinwoo/David-Attenborough-s-Life-On-Our-Planet',
-  imageUrl: `${baseUrl}assets/life-on-our-planet-atlas.png`,
+  imageUrl: publicPath('assets/life-on-our-planet-atlas.png'),
 }
 
 const writingSamples = [
@@ -193,21 +200,21 @@ const writingSamples = [
     title: 'Philosophy of Animals: Morality of Zoos',
     description:
       'An ethics paper evaluating zoos through animal sentience, public education, conservation, and moral responsibility.',
-    href: `${baseUrl}writing/writing-sample-ottley.pdf`,
+    href: publicPath('writing/writing-sample-ottley.pdf'),
     tags: ['Ethics', 'Animal philosophy', 'Argument'],
   },
   {
     title: 'Foucault and Information Technologies: The Owl of Minerva',
     description:
       'A political philosophy essay connecting discipline, surveillance, and information technologies through Foucault.',
-    href: `${baseUrl}writing/writing-sample-ii-ottley-james.pdf`,
+    href: publicPath('writing/writing-sample-ii-ottley-james.pdf'),
     tags: ['Political theory', 'Technology', 'Foucault'],
   },
   {
     title: 'Transcendence of Film to Art through Content-Imagination',
     description:
       'A philosophy of art paper examining how film can create content-imagination and simulated belief.',
-    href: `${baseUrl}writing/writing-sample-iii-ottley-james.pdf`,
+    href: publicPath('writing/writing-sample-iii-ottley-james.pdf'),
     tags: ['Aesthetics', 'Film', 'Analysis'],
   },
 ]
@@ -548,6 +555,23 @@ function App() {
         title="Writing samples"
         intro="Selected academic writing that reflects Patrick's research discipline, argument structure, and analytical range."
       >
+        <div className="writing-library" aria-label="Featured manuscript bookshelf">
+          <a className="verdant-shelf-book" href="#verdant-umbra" aria-label={`Read ${featuredBook.title}`}>
+            <span className="verdant-book-cover" aria-hidden="true">
+              <span className="verdant-book-spine" />
+              <span className="verdant-book-title">{featuredBook.title}</span>
+              <span className="verdant-book-mark" />
+            </span>
+            <span className="verdant-book-copy">
+              <span>
+                <BookOpen size={18} aria-hidden="true" />
+                Featured fiction
+              </span>
+              <strong>{featuredBook.title}</strong>
+              <small>{featuredBook.edition} - opens the inline reader below</small>
+            </span>
+          </a>
+        </div>
         <div className="writing-grid">
           {writingSamples.map(({ title, description, href, tags }) => (
             <article className="writing-card" key={title}>

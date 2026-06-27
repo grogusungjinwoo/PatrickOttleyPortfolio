@@ -9,10 +9,10 @@ pnpm install
 pnpm dev
 ```
 
-The site is configured for the GitHub Pages project path:
+The site is configured for custom-domain root deployment:
 
 ```text
-/PatrickOttleyPortfolio/
+https://www.jpottley.com/
 ```
 
 ## Verification
@@ -25,4 +25,4 @@ pnpm build
 
 ## Deployment
 
-The included GitHub Actions workflow builds `dist/` and deploys it to GitHub Pages when changes are pushed to `main` or `master`.
+The included GitHub Actions workflow builds `dist/` and deploys it to GitHub Pages at the custom domain root when changes are pushed to `main` or `master`.

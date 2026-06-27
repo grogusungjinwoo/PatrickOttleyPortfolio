@@ -1,4 +1,8 @@
+/// <reference types="node" />
+
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 
@@ -120,15 +124,15 @@ describe('Patrick Ottley portfolio', () => {
     )
     expect(screen.getByRole('link', { name: /morality of zoos/i })).toHaveAttribute(
       'href',
-      '/PatrickOttleyPortfolio/writing/writing-sample-ottley.pdf',
+      '/writing/writing-sample-ottley.pdf',
     )
     expect(screen.getByRole('link', { name: /foucault and information technologies/i })).toHaveAttribute(
       'href',
-      '/PatrickOttleyPortfolio/writing/writing-sample-ii-ottley-james.pdf',
+      '/writing/writing-sample-ii-ottley-james.pdf',
     )
     expect(screen.getByRole('link', { name: /transcendence of film to art/i })).toHaveAttribute(
       'href',
-      '/PatrickOttleyPortfolio/writing/writing-sample-iii-ottley-james.pdf',
+      '/writing/writing-sample-iii-ottley-james.pdf',
     )
 
     expect(screen.getAllByRole('link', { name: /email/i })[0]).toHaveAttribute(
@@ -141,29 +145,49 @@ describe('Patrick Ottley portfolio', () => {
     )
     expect(screen.getAllByRole('link', { name: /download resume/i })[0]).toHaveAttribute(
       'href',
-      '/PatrickOttleyPortfolio/JPO.Resume.pdf',
+      '/JPO.Resume.pdf',
     )
     expect(screen.getByText(/available for analyst opportunities/i)).toBeInTheDocument()
     expect(
       screen.getByText(/available for paraplanning and registered client service associate roles/i),
     ).toBeInTheDocument()
     expect(screen.getByText(/available for entry-level project manager roles/i)).toBeInTheDocument()
+    expect(screen.getByText(/walkin the dog llc \(dog daycare\)/i)).toBeInTheDocument()
+    expect(screen.getByText(/concierge resort deliver \(start-up\/crew lead\)/i)).toBeInTheDocument()
+    expect(screen.getByText(/westin riverfront/i)).toBeInTheDocument()
   })
 
   it('renders the Verdant Umbra flipbook reader as an animated book with static pages', async () => {
     render(<App />)
 
     expect(screen.getByRole('heading', { name: 'Verdant Umbra' })).toBeInTheDocument()
-    expect(screen.getByText(/draft chapters i-iii/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/draft chapters i-iii/i).length).toBeGreaterThan(0)
     expect(screen.queryByTitle('Verdant Umbra PDF reader')).not.toBeInTheDocument()
     expect(screen.getByRole('region', { name: /verdant umbra flipbook reader/i })).toBeInTheDocument()
     expect(screen.getByText(/animated book edition/i)).toBeInTheDocument()
     expect(screen.queryByText(/replaceable pdf asset/i)).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /read verdant umbra/i })).toHaveAttribute('href', '#verdant-umbra')
+    expect(screen.getByRole('img', { name: /verdant umbra manuscript page 1/i })).toHaveAttribute(
+      'src',
+      '/writing/verdant-umbra-pages/page-001.jpg',
+    )
     expect(screen.getByRole('button', { name: /previous page/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /next page/i })).toBeInTheDocument()
     expect(screen.getByText(/page 1 of 59/i)).toBeInTheDocument()
 
     const reader = screen.getByRole('region', { name: /verdant umbra flipbook reader/i })
+    const startBoundaryWheel = new WheelEvent('wheel', { bubbles: true, cancelable: true, deltaY: -120 })
+    fireEvent(reader, startBoundaryWheel)
+    expect(startBoundaryWheel.defaultPrevented).toBe(false)
+
+    const forwardWheel = new WheelEvent('wheel', { bubbles: true, cancelable: true, deltaY: 96 })
+    fireEvent(reader, forwardWheel)
+    expect(forwardWheel.defaultPrevented).toBe(true)
+    expect(screen.getByText(/page 2 of 59/i)).toBeInTheDocument()
+
+    fireEvent.click(within(reader).getByRole('button', { name: /previous page/i }))
+    expect(screen.getByText(/page 1 of 59/i)).toBeInTheDocument()
+
     fireEvent.click(within(reader).getByRole('button', { name: /next page/i }))
     expect(screen.getByText(/page 2 of 59/i)).toBeInTheDocument()
     fireEvent.click(within(reader).getByRole('button', { name: /previous page/i }))
@@ -173,9 +197,6 @@ describe('Patrick Ottley portfolio', () => {
     expect(screen.getByText(/page 2 of 59/i)).toBeInTheDocument()
     fireEvent.click(within(reader).getByRole('button', { name: /turn back/i }))
     expect(screen.getByText(/page 1 of 59/i)).toBeInTheDocument()
-
-    fireEvent.wheel(reader, { deltaY: 120 })
-    expect(screen.getByText(/page 2 of 59/i)).toBeInTheDocument()
 
     expect(screen.queryByRole('link', { name: /open pdf/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /download draft/i })).not.toBeInTheDocument()
@@ -188,7 +209,7 @@ describe('Patrick Ottley portfolio', () => {
     expect(screen.getByText(/ecological timeline and conservation interface/i)).toBeInTheDocument()
     expect(screen.getByRole('img', { name: /static preview of the life on our planet atlas interface/i })).toHaveAttribute(
       'src',
-      '/PatrickOttleyPortfolio/assets/life-on-our-planet-atlas.png',
+      '/assets/life-on-our-planet-atlas.png',
     )
 
     expect(screen.getByRole('link', { name: /open attenborough tribute/i })).toHaveAttribute(
@@ -216,6 +237,20 @@ describe('Patrick Ottley portfolio', () => {
         { cache: 'no-store' },
       )
     })
+  })
+
+  it('does not render stale project-path asset URLs', () => {
+    const { container } = render(<App />)
+    const legacyProjectPath = `/${['Patrick', 'Ottley', 'Portfolio'].join('')}/`
+    const renderedUrls = Array.from(container.querySelectorAll('[href], [src]'))
+      .flatMap((element) => [element.getAttribute('href'), element.getAttribute('src')])
+      .filter(Boolean)
+
+    expect(renderedUrls.some((url) => url?.includes(legacyProjectPath))).toBe(false)
+  })
+
+  it('ships the GitHub Pages custom domain with the public artifact', () => {
+    expect(readFileSync(join(process.cwd(), 'public', 'CNAME'), 'utf8').trim()).toBe('www.jpottley.com')
   })
 
   it('keeps the NVDA link visible when the latest chart data cannot be fetched', async () => {

@@ -36,7 +36,9 @@ type VerdantBookReaderProps = {
 
 const PRELOAD_BEFORE = 1
 const PRELOAD_AFTER = 2
-const WHEEL_TURN_THRESHOLD = 72
+const WHEEL_LINE_DELTA_PX = 16
+const WHEEL_PAGE_DELTA_PX = 640
+const WHEEL_TURN_DISTANCE = 72
 const WHEEL_TURN_COOLDOWN_MS = 260
 
 function makePageAssets(pageImageUrls: string[]) {
@@ -56,6 +58,30 @@ function getPageFlip(ref: FlipBookRef | null) {
 
 function clampPage(page: number, pageCount: number) {
   return Math.min(Math.max(page, 0), Math.max(pageCount - 1, 0))
+}
+
+function canTurnWithWheel(direction: -1 | 1, currentPage: number, pageCount: number) {
+  return direction < 0 ? currentPage > 0 : currentPage < pageCount - 1
+}
+
+function getWheelDeltaScale(deltaMode: number) {
+  if (deltaMode === 1) return WHEEL_LINE_DELTA_PX
+  if (deltaMode === 2) return WHEEL_PAGE_DELTA_PX
+
+  return 1
+}
+
+function getWheelScrollDistance(event: WheelEvent) {
+  const deltaScale = getWheelDeltaScale(event.deltaMode)
+
+  return {
+    x: event.deltaX * deltaScale,
+    y: event.deltaY * deltaScale,
+  }
+}
+
+function getFixedWheelDistance(deltaY: number) {
+  return Math.sign(deltaY) * Math.min(Math.abs(deltaY), WHEEL_TURN_DISTANCE)
 }
 
 function getPreloadPageNumbers(currentPage: number, pageCount: number) {
@@ -146,22 +172,32 @@ export function VerdantBookReader({ edition, pageImageUrls, title }: VerdantBook
 
   const handleReaderWheel = useCallback(
     (event: WheelEvent) => {
-      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return
+      const wheelDistance = getWheelScrollDistance(event)
 
-      const direction = event.deltaY > 0 ? 1 : -1
-      const isAtStart = currentPageRef.current === 0
-      const isAtEnd = currentPageRef.current >= pageCount - 1
+      if (Math.abs(wheelDistance.y) <= Math.abs(wheelDistance.x)) return
 
-      if ((direction < 0 && isAtStart) || (direction > 0 && isAtEnd)) {
+      const direction = wheelDistance.y > 0 ? 1 : -1
+
+      if (!canTurnWithWheel(direction, currentPageRef.current, pageCount)) {
         wheelDeltaRef.current = 0
         return
       }
 
       event.preventDefault()
       event.stopPropagation()
-      wheelDeltaRef.current += event.deltaY
 
-      if (wheelTurnCooldownRef.current || Math.abs(wheelDeltaRef.current) < WHEEL_TURN_THRESHOLD) return
+      if (wheelTurnCooldownRef.current) {
+        wheelDeltaRef.current = 0
+        return
+      }
+
+      if (Math.sign(wheelDeltaRef.current) !== 0 && Math.sign(wheelDeltaRef.current) !== direction) {
+        wheelDeltaRef.current = 0
+      }
+
+      wheelDeltaRef.current += getFixedWheelDistance(wheelDistance.y)
+
+      if (Math.abs(wheelDeltaRef.current) < WHEEL_TURN_DISTANCE) return
 
       const shouldTurnForward = wheelDeltaRef.current > 0
       wheelDeltaRef.current = 0
