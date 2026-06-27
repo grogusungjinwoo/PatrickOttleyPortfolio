@@ -27,13 +27,16 @@ import './App.css'
 import { NvdaHourChart } from './components/NvdaHourChart'
 import { VerdantBookReader } from './components/VerdantBookReader'
 
-function publicPath(path: string) {
-  const basePath = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`
+const STATIC_IMAGE_VERSION = '2026-06-27'
 
-  return `${basePath}${path.replace(/^\/+/, '')}`
+function publicPath(path: string, options: { cacheBust?: boolean } = {}) {
+  const basePath = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`
+  const resolvedPath = `${basePath}${path.replace(/^\/+/, '')}`
+
+  return options.cacheBust ? `${resolvedPath}?v=${STATIC_IMAGE_VERSION}` : resolvedPath
 }
 
-const portraitUrl = publicPath('assets/patrick-ottley.jpg')
+const portraitUrl = publicPath('assets/patrick-ottley.jpg', { cacheBust: true })
 const resumeUrl = publicPath('JPO.Resume.pdf')
 const featuredBook = {
   title: 'Verdant Umbra',
@@ -42,7 +45,8 @@ const featuredBook = {
 }
 const featuredBookPageUrls = Array.from(
   { length: featuredBook.pageCount },
-  (_, index) => publicPath(`writing/verdant-umbra-pages/page-${String(index + 1).padStart(3, '0')}.jpg`),
+  (_, index) =>
+    publicPath(`writing/verdant-umbra-pages/page-${String(index + 1).padStart(3, '0')}.jpg`, { cacheBust: true }),
 )
 
 const navItems = [
@@ -192,7 +196,7 @@ const publicBuilds = [
 const lifeProject = {
   liveUrl: 'https://grogusungjinwoo.github.io/David-Attenborough-s-Life-On-Our-Planet/',
   sourceUrl: 'https://github.com/grogusungjinwoo/David-Attenborough-s-Life-On-Our-Planet',
-  imageUrl: publicPath('assets/life-on-our-planet-atlas.png'),
+  imageUrl: publicPath('assets/life-on-our-planet-atlas.png', { cacheBust: true }),
 }
 
 const writingSamples = [

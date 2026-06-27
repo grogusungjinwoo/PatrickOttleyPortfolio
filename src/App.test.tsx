@@ -169,7 +169,7 @@ describe('Patrick Ottley portfolio', () => {
     expect(screen.getByRole('link', { name: /read verdant umbra/i })).toHaveAttribute('href', '#verdant-umbra')
     expect(screen.getByRole('img', { name: /verdant umbra manuscript page 1/i })).toHaveAttribute(
       'src',
-      '/writing/verdant-umbra-pages/page-001.jpg',
+      '/writing/verdant-umbra-pages/page-001.jpg?v=2026-06-27',
     )
     expect(screen.getByRole('button', { name: /previous page/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /next page/i })).toBeInTheDocument()
@@ -209,7 +209,7 @@ describe('Patrick Ottley portfolio', () => {
     expect(screen.getByText(/ecological timeline and conservation interface/i)).toBeInTheDocument()
     expect(screen.getByRole('img', { name: /static preview of the life on our planet atlas interface/i })).toHaveAttribute(
       'src',
-      '/assets/life-on-our-planet-atlas.png',
+      '/assets/life-on-our-planet-atlas.png?v=2026-06-27',
     )
 
     expect(screen.getByRole('link', { name: /open attenborough tribute/i })).toHaveAttribute(
@@ -247,6 +247,23 @@ describe('Patrick Ottley portfolio', () => {
       .filter(Boolean)
 
     expect(renderedUrls.some((url) => url?.includes(legacyProjectPath))).toBe(false)
+  })
+
+  it('cache-busts public image assets without cache-busting document links', () => {
+    render(<App />)
+
+    expect(screen.getByRole('img', { name: /patrick ottley in a suit/i })).toHaveAttribute(
+      'src',
+      '/assets/patrick-ottley.jpg?v=2026-06-27',
+    )
+    expect(screen.getAllByRole('link', { name: /download resume/i })[0]).toHaveAttribute(
+      'href',
+      '/JPO.Resume.pdf',
+    )
+    expect(screen.getByRole('link', { name: /morality of zoos/i })).toHaveAttribute(
+      'href',
+      '/writing/writing-sample-ottley.pdf',
+    )
   })
 
   it('ships the GitHub Pages custom domain with the public artifact', () => {
